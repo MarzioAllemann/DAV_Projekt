@@ -37,7 +37,7 @@
 - (int) STDs: Time since last diagnosis
 - (bool) Dx:Cancer - Dx bedeutet Diagnose Krebs (allgemein)
 - (bool) Dx:CIN - Zervixdysplasie Diagnose
-- (bool) Dx:HPV - HPV-Infektion nachgewiesn
+- (bool) Dx:HPV - HPV-Infektion nachgewiesen
 - (bool) Dx - allgemein Diagnose
 - (bool) Hinselmann: target variable
 - (bool) Schiller: target variable
@@ -45,48 +45,36 @@
 - (bool) Biopsy: target variable
 
 
-
-
 ## Bereinigte Schritte
 - Falsche dtypes der Spalten umgewandelt (v.a. objects → bool)
-- Fehlende Werte zunächst mim NaNs ersetzt, dann mit MICE ersetzt.
-- Mice wandelt alle dtypes in floats um → zurückumwandeln
+- Fehlende Werte zunächst mit NaNs ersetzt, dann mit MICE ersetzt.
+- MICE wandelt alle dtypes in floats um → zurückumwandeln
 
 
 ### Analyse der fehlenden Werte
-#### MCAR‑Analyse (Little’s Test)
-Um zu prüfen, ob die fehlenden Werte vollständig zufällig (MCAR) auftreten, wurde Little’s MCAR‑Test durchgeführt.
-Der Test ergab p‑Werte nahe 0, was bedeutet:
-- Die Missingness ist nicht MCAR
-- Es gibt systematische Unterschiede zwischen Fällen mit und ohne Missing Values
-- Ein einfaches listenweises Löschen würde zu Bias und Informationsverlust führen
 
-Damit ist klar:
-MCAR kann ausgeschlossen werden
-
-#### MAR‑Analyse (Missing At Random)
+#### Untersuchung auf MAR (Missing At Random)
 Da Age und Biopsy die einzigen Variablen ohne Missing Values sind, wurden sie als potenzielle Prädiktoren für Missingness verwendet.
 Für jede Variable mit fehlenden Werten wurden zwei Tests durchgeführt:
 
-- t‑Test: prüft, ob sich das Alter zwischen Missing‑ und Nicht‑Missing‑Gruppe unterscheidet
-- Chi‑Quadrat‑Test: prüft, ob Missingness vom Biopsy‑Status abhängt
+- **t-Test**: Prüft, ob sich das Alter zwischen Missing- und Nicht-Missing-Gruppe unterscheidet
+- **Chi-Quadrat-Test**: Prüft, ob Missingness vom Biopsy-Status abhängt
 
+**Starke MAR-Hinweise über Alter (p < 0.005)**
 
-**Starke MAR‑Hinweise über Alter (Age_p < 0.001)**
+Folgende Variablen zeigen hochsignifikante Altersunterschiede:
 
-Besonders bei folgenden Variablen zeigen sich hochsignifikante Altersunterschiede:
-
-- Hormonal Contraceptives
-
-- Hormonal Contraceptives (years)
-
-- IUD
-
-- IUD (years)
-
-- Alle STD‑bezogenen Variablen (STDs, STDs:number, alle einzelnen STD‑Diagnosen)
-
-Diese Variablen haben Age‑p‑Werte zwischen 0.000088 und 0.000158.
+- Hormonal Contraceptives (p = 0.0001)
+- Hormonal Contraceptives (years) (p = 0.0001)
+- IUD (p = 0.0015)
+- IUD (years) (p = 0.0015)
+- Alle STD-bezogenen Variablen (p = 0.0002)
+  - STDs, STDs (number)
+  - STDs:condylomatosis, STDs:cervical condylomatosis
+  - STDs:vaginal condylomatosis, STDs:vulvo-perineal condylomatosis
+  - STDs:syphilis, STDs:pelvic inflammatory disease
+  - STDs:genital herpes, STDs:molluscum contagiosum
+  - STDs:AIDS, STDs:HIV, STDs:Hepatitis B, STDs:HPV
 
 Interpretation:  
 Das Alter beeinflusst klar, ob Personen diese Fragen beantworten.
@@ -94,59 +82,57 @@ Gerade Fragen zu Sexualverhalten, Verhütung und STDs sind sensibel – es ist p
 
 → MAR über Alter ist sehr wahrscheinlich.
 
+**MAR-Hinweise über Biopsy (p < 0.01)**
 
-**MAR‑Hinweise über Biopsy (Biopsy_p < 0.05)**
+Einige Variablen zeigen signifikante Zusammenhänge zwischen Missingness und Biopsy-Status:
 
-Einige Variablen zeigen signifikante Zusammenhänge zwischen Missingness und Biopsy‑Status:
-
-- Hormonal Contraceptives (p ≈ 0.0069)
-
-- Hormonal Contraceptives (years) (p ≈ 0.0069)
-
-- STDs: Time since first diagnosis (p ≈ 0.0026)
-
-- STDs: Time since last diagnosis (p ≈ 0.0026)
+- STDs: Time since first diagnosis (p = 0.0026)
+- STDs: Time since last diagnosis (p = 0.0026)
+- Hormonal Contraceptives (p = 0.0070)
+- Hormonal Contraceptives (years) (p = 0.0070)
 
 Interpretation:  
-Personen mit positivem Biopsy‑Status beantworten bestimmte Fragen systematisch häufiger oder seltener.
+Personen mit positivem Biopsy-Status beantworten bestimmte Fragen systematisch häufiger oder seltener.
 Auch hier deutet das auf MAR hin.
 
-**Variablen ohne MAR‑Hinweis (p ≥ 0.05)**
-Einige Variablen zeigen weder Alters‑ noch Biopsy‑Effekte:
+**Variablen ohne MAR-Hinweis (p ≥ 0.05)**
 
-- Number of sexual partners
+Folgende Variablen zeigen weder Alters- noch Biopsy-Effekte:
 
-- First sexual intercourse
-
-- Num of pregnancies
-
-- Smoking‑Variablen
+- Number of sexual partners (p = 0.892)
+- First sexual intercourse (p = 1.000)
+- Num of pregnancies (p = 0.101)
+- Smokes (p = 1.000)
+- Smokes (years) (p = 1.000)
+- Smokes (packs/year) (p = 1.000)
 
 Für diese Variablen gibt es keinen Hinweis auf MAR über Age oder Biopsy.
 Sie könnten MCAR sein – oder MAR über andere, nicht getestete Variablen.
 
+**Gesamtbewertung der Missingness:**
+
+Die systematischen Zusammenhänge mit Alter und Biopsy zeigen, dass die fehlenden Werte nicht vollständig zufällig (MCAR) sind. Ein einfaches listenweises Löschen würde zu Bias und Informationsverlust führen. Die Daten sind wahrscheinlich MAR (Missing At Random) oder MNAR (Missing Not At Random).
 
 
 ## Wichtigste Erkenntnisse
 - Boxplots der Features mit Farbkodierung nach Biopsy zeigen, dass es keine klaren Entscheidungsgrenzen gibt.
-- Biopsy hat kaum einen linearen Zusammenhang mit den Features
-- RandomForest-Classifier ist nicht signifikant besser für Klassifizierung als ein KNN-Classifier.
-- Bei der RFECV wurden 34, also fast alle Features ausgewählt. Das macht auch grundsätzlich so Sinn, da ein RandomForest sehr von vielen Features profitiert.
+- Biopsy hat kaum einen linearen Zusammenhang mit den Features.
+- RandomForest mit RFECV (Recursive Feature Elimination with Cross-Validation) konnte die Anzahl der Features von 35 auf 19 reduzieren (45.7% Reduktion) bei gleichbleibend hoher Accuracy.
+- Die Feature Selection durch RFECV verbessert die Generalisierung und reduziert Overfitting.
+- RandomForest-Classifier mit RFECV ist signifikant besser für die Klassifizierung als ein KNN-Classifier (McNemar-Test, p < 0.05).
 - Dimensionsreduktion mit PCA behält etwa 76% der Informationen.
 
 ### Erhöhtes Risiko für Cervical Cancer
-- Diagnose Tests wie Schiller, Hinselmann und Citology (stark)
+- Diagnose Tests wie Schiller, Hinselmann und Cytology (stark)
 - Dx: CIN (stark)
 - Kürzlich diagnostizierte STDs (mittel)
 - Lange Nutzung von hormonellen Verhütungsmitteln (mittel)
-- Eine HPV Diagnose (mittel aber Entscheidungsgrenze ausgeprägt)
-- je mehr Schwangerschaften die Person schon hatte (schwach)
-- je älter die Patientin ist (schwach)
-- je mehr STDs man schon hatte (schwach)
+- Eine HPV Diagnose (mittel, aber Entscheidungsgrenze ausgeprägt)
+- Je mehr Schwangerschaften die Person schon hatte (schwach)
+- Je älter die Patientin ist (schwach)
+- Je mehr STDs man schon hatte (schwach)
 - Spiralen zur Verhütung (IUD) (schwach)
-- Rauchen (Anzahl Schachteln pro Jahr und Jahre) (schwach aber Entscheidungsgrenze ersichtlich)
-
-
+- Rauchen (Anzahl Schachteln pro Jahr und Jahre) (schwach, aber Entscheidungsgrenze ersichtlich)
 
 
 ## Technik
